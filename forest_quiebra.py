@@ -5,7 +5,6 @@ import sklearn.ensemble # para el random forest
 import sklearn.model_selection # para split train-test
 import sklearn.metrics # para calcular el f1-score
 from scipy.io import arff
-#%matplotlib inline
 
 names = [
 'X1 net profit / total assets',
@@ -87,6 +86,7 @@ data = pd.concat([data1, data2, data3, data4, data5])
 data.columns = names
 #df.head()
 data = data.dropna()
+print(np.shape(data))
 
 purchasebin = np.ones(len(data), dtype = int)
 ii = np.array(data['class'] == b'0')
@@ -108,18 +108,18 @@ X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
 n_trees = np.arange(1,10,1)
 f1_train = []
 f1_test = []
+f1_val = []
 feature_importance = np.zeros((len(n_trees), len(predictors)))
-#feature_importance.shape
 for i, n_tree in enumerate(n_trees):
     clf = sklearn.ensemble.RandomForestClassifier(n_estimators = n_tree, max_features = 'sqrt')
     clf.fit(X_train, y_train)
     f1_train.append(sklearn.metrics.f1_score(y_train, clf.predict(X_train)))
     f1_test.append(sklearn.metrics.f1_score(y_test, clf.predict(X_test)))
+    f1_val.append(sklearn.metrics.f1_score(y_val, clf.predict(x_val)))
     feature_importance[i, :] = clf.feature_importances_
 
 tree_max = np.argmax(f1_test) + 1
 
-# Grafica los features mas importantes
 clf = sklearn.ensemble.RandomForestClassifier(n_estimators = tree_max, max_features = 'sqrt')
 clf.fit(X_train, y_train)
 f1 = sklearn.metrics.f1_score(y_val, clf.predict(x_val))
@@ -128,7 +128,9 @@ a = pd.Series(avg_importance, index=predictors)
 #print(a)
 a.nlargest().plot(kind='barh')
 plt.xlabel('Average Feature Importance')
-plt.title(r'$M = $ %0.0f' %tree_max + r'$f_1 = $ %0.4f' %f1)
-plt.savefig('features.png')
+plt.title(r'$M = $ %0.0f' %tree_max + r'$\quad$'+ r'$f_1 Score = $ %0.4f' %f1_val[tree_max])
+plt.savefig('features.png', bbox_inches='tight')
 plt.show()
+
+
 
